@@ -5,7 +5,7 @@ use Illuminate\Http\Request;
 
 interface AuthRepositoryInterface
 {
-    public function login(Request $request);
-    public function register(Request $request);
-    public function logout(Request $request);
+    public function register(array $data): void;
+    public function login(Request $request): void;
+    public function logout(Request $request): void;
 }

@@ -52,7 +52,7 @@
                                     </div>
                                 @endif
 
-                                <form method="POST" action="{{ url('/login') }}" class="authentication-form">
+                                <form method="POST" action="{{ route('admin.login') }}" class="authentication-form">
                                     @csrf
                                     <div class="mb-3">
                                         <label class="form-label" for="email">Email</label>

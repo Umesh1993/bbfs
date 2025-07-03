@@ -3,13 +3,13 @@
 @php
 $topbarText = 'Create Category';
 @endphp
-
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
 @endpush
 
 @section('content')
 <div class="container-xxl">
+
     <div class="row">
         @if(session('success'))
         <div class="alert alert-success">
@@ -24,53 +24,16 @@ $topbarText = 'Create Category';
             @endforeach
         </div>
         @endif
-        <!-- <div class="col-xl-3 col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <div class="bg-light text-center rounded bg-light">
-                        <img src="assets/images/product/p-1.png" alt="" class="avatar-xxl">
-                    </div>
-                    <div class="mt-3">
-                        <h4>Fashion Men , Women & Kid's</h4>
-                        <div class="row">
-                            <div class="col-lg-4 col-4">
-                                <p class="mb-1 mt-2">Created By :</p>
-                                <h5 class="mb-0">Seller</h5>
-                            </div>
-                            <div class="col-lg-4 col-4">
-                                <p class="mb-1 mt-2">Stock :</p>
-                                <h5 class="mb-0">46233</h5>
-                            </div>
-                            <div class="col-lg-4 col-4">
-                                <p class="mb-1 mt-2">ID :</p>
-                                <h5 class="mb-0">FS16276</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer border-top">
-                    <div class="row g-2">
-                        <div class="col-lg-6">
-                            <a href="#!" class="btn btn-outline-secondary w-100">Create Category</a>
-                        </div>
-                        <div class="col-lg-6">
-                            <a href="#!" class="btn btn-primary w-100">Cancel</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-        <div class="col-xl-12 col-lg-12 ">
-
-            <form action="{{ route('categories.store') }}" method="POST" enctype="multipart/form-data"
+        <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data"
                 id="categoryForm">
                 @csrf
+            <div class="col-xl-12 col-lg-12 "> 
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">Add Thumbnail Photo</h4>
                     </div>
                     <div class="card-body">
+                        <!-- File Upload -->
                         <div class="dropzone" id="categoryDropzone">
                             <div class="fallback">
                                 <input name="thumbnail" type="file" />
@@ -78,8 +41,11 @@ $topbarText = 'Create Category';
                             <div class="dz-message needsclick">
                                 <i class="bx bx-cloud-upload fs-48 text-primary"></i>
                                 <h3 class="mt-4">Drop your images here, or <span class="text-primary">click to
-                                        browse</span></h3>
-                                <span class="text-muted fs-13">1600x1200 recommended. PNG, JPG, GIF allowed.</span>
+                                        browse</span>
+                                </h3>
+                                <span class="text-muted fs-13">
+                                    1600 x 1200 (4:3) recommended. PNG, JPG and GIF files are allowed
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -155,68 +121,96 @@ $topbarText = 'Create Category';
                             <button type="submit" class="btn btn-outline-secondary w-100">Save Change</button>
                         </div>
                         <div class="col-lg-2">
-                            <a href="{{ route('categories.index') }}" class="btn btn-primary w-100">Cancel</a>
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-primary w-100">Cancel</a>
                         </div>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
 <script>
-// Disable auto processing
 Dropzone.autoDiscover = false;
 
-const myDropzone = new Dropzone("#categoryDropzone", {
-    autoProcessQueue: false,
-    uploadMultiple: false,
-    maxFiles: 1,
-    paramName: "thumbnail",
+const dropzone = new Dropzone("#categoryDropzone", {
+    url: "{{ route('admin.categories.store') }}",
+    method: "post",
+    headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+        
+    },
+    paramName: "thumbnail", // important: use array name
+    uploadMultiple: true,
+    parallelUploads: 10,
+    maxFiles: 10,
     acceptedFiles: "image/*",
-    addRemoveLinks: true
+    addRemoveLinks: true,
+    autoProcessQueue: false,
+    headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    },
+    init: function () {
+        this.on("addedfile", function (file) {
+            if (this.files.length > 1) {
+                this.removeFile(this.files[0]); // only allow 1 file
+            }
+            uploadedFile = file;
+        });
+
+        this.on("removedfile", function () {
+            uploadedFile = null;
+        });
+    }
 });
 
-// On submit, append the file manually and submit the form
-document.querySelector("#categoryForm").addEventListener("submit", async function(e) {
+// Submit form manually and include Dropzone files
+document.querySelector("#categoryForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
-    const form = e.target;
-    const formData = new FormData(form);
-
-    const file = myDropzone.getAcceptedFiles()[0];
-    if (!file) {
+    if (!uploadedFile) {
         alert("Please upload a thumbnail image.");
         return;
     }
 
-    formData.append("thumbnail", file);
+    const form = e.target;
+    const formData = new FormData(form);
+    formData.append("thumbnail", uploadedFile);
 
-    try {
-        const response = await fetch(form.action, {
+
+    fetch(form.action, {
             method: "POST",
+            body: formData,
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
-            },
-            body: formData
+            }
+        })
+       .then(response => {
+            if (!response.ok) throw response;
+            return response.json();
+        })
+        .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                alert(data.message || 'Success, but no redirect URL provided.');
+            }
+        })
+        .catch(async (error) => {
+            let message = 'Upload failed.';
+            if (error.json) {
+                const err = await error.json();
+                message = err.message || 'Upload failed.';
+                console.error('Server Error:', err.errors || err);
+            } else {
+                console.error(error);
+            }
+            alert(message);
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            alert(error.message || "Something went wrong.");
-            return;
-        }
-
-        const result = await response.json();
-        window.location.href = "{{ route('categories.index') }}";
-
-    } catch (error) {
-        console.error("Error:", error);
-        alert("An unexpected error occurred.");
-    }
 });
 
 </script>

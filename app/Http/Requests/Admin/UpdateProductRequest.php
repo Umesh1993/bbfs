@@ -4,7 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreProductRequest extends FormRequest
+class UpdateProductRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,6 +21,8 @@ class StoreProductRequest extends FormRequest
      */
     public function rules(): array
     {
+         $isUpdate = $this->method() === 'PUT' || $this->method() === 'PATCH';
+
          return [
             'name' => ['required', 'string', 'max:255'],
             'brand_id' => ['nullable', 'exists:brands,id'],
@@ -33,13 +35,13 @@ class StoreProductRequest extends FormRequest
             'is_new_arrival' => ['sometimes', 'boolean'],
             'stock' => ['required', 'integer', 'min:0'],
 
-            'colors' => ['required', 'array'],
+            'colors' => $isUpdate ? ['nullable', 'array'] : ['required', 'array'],
             'colors.*' => ['required', 'string', 'max:100'],
 
-            'sizes' => ['required', 'array'],
+            'sizes' => $isUpdate ? ['nullable', 'array'] : ['required', 'array'],
             'sizes.*' => ['required', 'string', 'max:50'],
 
-            'product_images' => ['required', 'array'],
+            'product_images' => $isUpdate ? ['nullable', 'array'] : ['required', 'array'],
             'product_images.*' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
         ];
 

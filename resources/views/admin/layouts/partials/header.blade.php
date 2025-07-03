@@ -189,7 +189,7 @@
 
                          <div class="dropdown-divider my-1"></div>
 
-                         <a class="dropdown-item text-danger" href="{{route('logout')}}">
+                         <a class="dropdown-item text-danger" href="{{route('admin.logout')}}">
                              <i class="bx bx-log-out fs-18 align-middle me-1"></i><span
                                  class="align-middle">Logout</span>
                          </a>

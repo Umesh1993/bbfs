@@ -72,7 +72,7 @@ $topbarText = 'Category List';
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">All Categories List</h4>
 
-                    <a href="{{route('categories.create')}}" class="btn btn-sm btn-primary">
+                    <a href="{{route('admin.categories.create')}}" class="btn btn-sm btn-primary">
                         Add Category
                     </a>
 
@@ -138,22 +138,16 @@ $topbarText = 'Category List';
                                     <td>{{$category->description}}</td>
                                     <td>
                                         <div class="d-flex gap-2">
-                                            <!-- {{-- View Button --}}
-                                            <a href="{{ route('categories.show', $category->id) }}"
-                                                class="btn btn-light btn-sm">
-                                                <iconify-icon icon="solar:eye-broken" class="align-middle fs-18">
-                                                </iconify-icon>
-                                            </a> -->
-
+                                    
                                             {{-- Edit Button --}}
-                                            <a href="{{ route('categories.edit', $category->id) }}"
+                                            <a href="{{ route('admin.categories.edit', $category->id) }}"
                                                 class="btn btn-soft-primary btn-sm">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18">
                                                 </iconify-icon>
                                             </a>
 
                                             {{-- Delete Button --}}
-                                            <form action="{{ route('categories.destroy', $category->id) }}"
+                                            <form action="{{ route('admin.categories.destroy', $category->id) }}"
                                                 method="POST"
                                                 onsubmit="return confirm('Are you sure you want to delete this category?');">
                                                 @csrf

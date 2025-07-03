@@ -52,7 +52,7 @@
                                     </div>
                                 @endif
 
-                                <form method="POST" action="{{ route('register') }}" class="authentication-form">
+                                <form method="POST" action="{{ route('admin.register') }}" class="authentication-form">
                                     @csrf
                                     <div class="mb-3">
                                         <label class="form-label" for="name">Name</label>
@@ -82,7 +82,7 @@
                                 </form>
 
                                 <p class="mt-4 text-danger text-center">Already have an account?
-                                    <a href="{{ route('login') }}" class="text-dark fw-bold ms-1">Sign In</a>
+                                    <a href="{{ route('admin.login') }}" class="text-dark fw-bold ms-1">Sign In</a>
                                 </p>
                             </div>
                         </div>

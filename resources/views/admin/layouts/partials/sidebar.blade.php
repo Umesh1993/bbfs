@@ -290,12 +290,12 @@
    <div class="main-nav">
        <!-- Sidebar Logo -->
        <div class="logo-box">
-           <a href="{{route('dashboard')}}" class="logo-dark">
+           <a href="{{route('admin.dashboard')}}" class="logo-dark">
                <img src="{{asset('assets/images/logo-sm.png')}}" class="logo-sm" alt="logo sm">
                <img src="{{asset('assets/images/logo-dark.png')}}" class="logo-lg" alt="logo dark">
            </a>
 
-           <a href="{{route('dashboard')}}" class="logo-light">
+           <a href="{{route('admin.dashboard')}}" class="logo-light">
                <img src="{{asset('assets/images/logo-sm.png')}}" class="logo-sm" alt="logo sm">
                <img src="{{asset('assets/images/logo-light.png')}}" class="logo-lg" alt="logo light">
            </a>
@@ -311,7 +311,7 @@
                <li class="menu-title">General</li>
 
                <li class="nav-item">
-                   <a class="nav-link" href="{{route('dashboard')}}">
+                   <a class="nav-link" href="{{route('admin.dashboard')}}">
                        <span class="nav-icon">
                            <iconify-icon icon="solar:widget-5-bold-duotone"></iconify-icon>
                        </span>
@@ -330,10 +330,10 @@
                    <div class="collapse" id="sidebarProducts">
                        <ul class="nav sub-navbar-nav">
                            <li class="sub-nav-item">
-                               <a class="sub-nav-link" href="{{ route('products.index') }}">List</a>
+                               <a class="sub-nav-link" href="{{ route('admin.products.index') }}">List</a>
                            </li>
                            <li class="sub-nav-item">
-                               <a class="sub-nav-link" href="{{ route('products.create') }}">Create</a>
+                               <a class="sub-nav-link" href="{{ route('admin.products.create') }}">Create</a>
                            </li>
                        </ul>
                    </div>
@@ -350,13 +350,10 @@
                    <div class="collapse" id="sidebarCategory">
                        <ul class="nav sub-navbar-nav">
                            <li class="sub-nav-item">
-                               <a class="sub-nav-link" href="{{ route('categories.index') }}">List</a>
+                               <a class="sub-nav-link" href="{{ route('admin.categories.index') }}">List</a>
                            </li>
-                           <!-- <li class="sub-nav-item">
-                               <a class="sub-nav-link" href="{{ route('categories.edit', 1) }}">Edit</a>
-                           </li> -->
                            <li class="sub-nav-item">
-                               <a class="sub-nav-link" href="{{route('categories.create')}}">Create</a>
+                               <a class="sub-nav-link" href="{{route('admin.categories.create')}}">Create</a>
                            </li>
                        </ul>
                    </div>

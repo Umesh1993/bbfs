@@ -26,7 +26,7 @@ Route::prefix('admin')->name('admin.')->middleware('guest:admin')->group(functio
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin.role'])->group(function () {
-    Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -36,14 +36,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin.role'])
     Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::get('/categories/{id}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::post('/categories/images/delete', [CategoryController::class, 'deleteImage'])
+    ->name('categories.images.delete');
 
     // products
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
-    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
-    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/products/images/delete', [ProductController::class, 'deleteImage'])
+    ->name('products.images.delete');
 
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });

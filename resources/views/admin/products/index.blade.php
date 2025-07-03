@@ -14,7 +14,7 @@ $topbarText = 'Product List';
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">All Product List</h4>
 
-                    <a href="{{ route('products.create') }}" class="btn btn-sm btn-primary">
+                    <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-primary">
                         Add Product
                     </a>
 
@@ -44,63 +44,71 @@ $topbarText = 'Product List';
                                             <label class="form-check-label" for="customCheck1"></label>
                                         </div>
                                     </th>
-                                    <th>Product Name & Size</th>
-                                    <th>Price</th>
-                                    <th>Stock</th>
-                                    <th>Category</th>
-                                    <th>Rating</th>
-                                    <th>Action</th>
+                                    <th class="px-4 py-3">Product Name & Size</th>
+                                    <th class="px-4 py-3">Price</th>
+                                    <th class="px-4 py-3">Stock</th>
+                                    <th class="px-4 py-3">Category</th>
+                                    <th class="px-4 py-3">Rating</th>
+                                    <th class="px-4 py-3">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="form-check ms-1">
-                                            <input type="checkbox" class="form-check-input" id="customCheck2">
-                                            <label class="form-check-label" for="customCheck2">&nbsp;</label>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div
-                                                class="rounded bg-light avatar-md d-flex align-items-center justify-content-center">
-                                                <img src="assets/images/product/p-1.png" alt="" class="avatar-md">
-                                            </div>
+                                 @foreach($products as $product)
+                                    <tr class="border-t">
+                                        <td class="px-4 py-3">
+                                            <input type="checkbox" value="{{ $product->id }}">
+                                        </td>
+                                        <td class="px-4 py-3 flex items-center gap-4">
+                                            @php
+                                                $image = $product->images->first();
+                                            @endphp
+                                            <img src="{{ asset('storage/' . ($image->image_path ?? 'placeholder.png')) }}" alt="product" width="70px" height="70px" class="w-12 h-12 object-cover rounded" />
                                             <div>
-                                                <a href="#!" class="text-dark fw-medium fs-15">Black T-shirt</a>
-                                                <p class="text-muted mb-0 mt-1 fs-13"><span>Size : </span>S , M , L , Xl
-                                                </p>
+                                                <p class="font-medium">{{ $product->name }}</p>
+                                                <span class="text-xs text-gray-500">
+                                                    Size: {{ $product->variants->pluck('size')->unique()->implode(' , ') }}
+                                                </span>
                                             </div>
-                                        </div>
+                                        </td>
+                                        <td class="px-4 py-3">{{ getPriceByCurrency($product) }}</td>
+                                        <td class="px-4 py-3">
+                                            {{ $product->stock }} Item Left<br>
+                                            <span class="text-sm text-gray-500">{{ $product->sold ?? 155 }} Sold</span>
+                                        </td>
+                                        <td class="px-4 py-3">{{ $product->category->title ?? '-' }}</td>
+                                        <td class="px-4 py-3 flex items-center gap-2">
+                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs font-semibold rounded flex items-center">
+                                                <i class="fas fa-star text-yellow-500 mr-1"></i>
+                                                {{ number_format($product->reviews->avg('rating') ?? 4.5, 1) }}
+                                            </span>
+                                            <span class="text-sm text-gray-500">{{ $product->reviews->count() }} Review</span>
+                                        </td>
+                                        <td class="px-4 py-3 flex gap-2">
 
-                                    </td>
-                                    <td>$80.00</td>
-                                    <td>
-                                        <p class="mb-1 text-muted"><span class="text-dark fw-medium">486 Item</span>
-                                            Left</p>
-                                        <p class="mb-0 text-muted">155 Sold</p>
-                                    </td>
-                                    <td> Fashion</td>
-                                    <td> <span class="badge p-1 bg-light text-dark fs-12 me-1"><i
-                                                class="bx bxs-star align-text-top fs-14 text-warning me-1"></i>
-                                            4.5</span> 55 Review</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <a href="#!" class="btn btn-light btn-sm">
-                                                <iconify-icon icon="solar:eye-broken" class="align-middle fs-18">
-                                                </iconify-icon>
-                                            </a>
-                                            <a href="#!" class="btn btn-soft-primary btn-sm">
-                                                <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18">
-                                                </iconify-icon>
-                                            </a>
-                                            <a href="#!" class="btn btn-soft-danger btn-sm">
-                                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
-                                                    class="align-middle fs-18"></iconify-icon>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                            <div class="d-flex gap-2">
+                                        
+                                                {{-- Edit Button --}}
+                                                <a href="{{ route('admin.products.edit', $product->id) }}"
+                                                    class="btn btn-soft-primary btn-sm">
+                                                    <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18">
+                                                    </iconify-icon>
+                                                </a>
+
+                                                {{-- Delete Button --}}
+                                                <form action="{{ route('admin.products.destroy', $product->id) }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-soft-danger btn-sm">
+                                                        <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                                            class="align-middle fs-18"></iconify-icon>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
                             </tbody>
                         </table>
                     </div>

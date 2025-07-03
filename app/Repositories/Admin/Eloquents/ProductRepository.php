@@ -4,24 +4,37 @@ namespace App\Repositories\Admin\Eloquents;
 
 use App\Models\Product;
 use App\Repositories\Admin\Contracts\ProductRepositoryInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function all() {
-        return Product::with(['category', 'variants', 'reviews'])->paginate(10);
+    /**
+     * Get all products with relationships.
+     *
+     * @return LengthAwarePaginator
+     */
+    public function all(): LengthAwarePaginator
+    {
+        return Product::with(['category', 'images', 'variants', 'reviews'])->paginate(10);
     }
 
-    public function createProduct(array $data)
+    /**
+     * Store a new product with images and variants.
+     *
+     * @param array $data
+     * @return Product
+     */
+    public function createProduct(array $data): Product
     {
         $images = $data['images'] ?? [];
         $variants = $data['variants'] ?? [];
 
-        // Remove relational data
         unset($data['images'], $data['variants']);
 
-        // Create product
-
-      
         $product = Product::create([
             'name' => $data['name'],
             'category_id' => $data['category_id'],
@@ -35,55 +48,96 @@ class ProductRepository implements ProductRepositoryInterface
             'stock' => $data['stock'] ?? 0,
         ]);
 
-       // Store images
-        foreach ($images as $image) {
-            $path = $image->store('products', 'public');
-            $product->images()->create([
-                'image_path' => $path,
-            ]);
-        }
-
-        // Store variants
-        foreach ($variants as $variant) {
-            $product->variants()->create($variant);
-        }
+        $this->storeImages($product, $images);
+        $this->storeVariants($product, $variants);
 
         return $product;
     }
 
-
-    public function find($id) {
-        return Product::with(['category', 'variants', 'reviews'])->findOrFail($id);
+    /**
+     * Find a product by ID with its relationships.
+     *
+     * @param int $id
+     * @return Product
+     *
+     * @throws ModelNotFoundException
+     */
+    public function find(int $id): Product
+    {
+        return Product::with(['category', 'images', 'variants', 'reviews'])->findOrFail($id);
     }
 
-    public function update($id, array $data) {
+    /**
+     * Update an existing product with images and variants.
+     *
+     * @param int $id
+     * @param array $data
+     * @return Product
+     */
+    public function update(int $id, array $data): Product
+    {
+        $product = Product::findOrFail($id);
 
         $images = $data['images'] ?? [];
-        unset($data['images']);
+        $variants = $data['variants'] ?? [];
 
-        $product = Product::findOrFail($id);
+        unset($data['images'], $data['variants']);
+
         $product->update($data);
 
         if (!empty($images)) {
-            foreach ($images as $image) {
-                $path = $image->store('products', 'public');
-                $product->images()->create([
-                    'image_path' => $path,
-                ]);
-            }
+            $this->storeImages($product, $images);
         }
 
+        // Replace variants
         $product->variants()->delete();
-        if (!empty($data['variants'])) {
-            foreach ($data['variants'] as $variant) {
-                $product->variants()->create($variant);
-            }
-        }
+        $this->storeVariants($product, $variants);
 
         return $product;
     }
 
-    public function delete($id) {
-        return Product::destroy($id);
+    /**
+     * Delete a product by ID.
+     *
+     * @param int $id
+     * @return bool|null
+     */
+    public function delete(int $id): ?bool
+    {
+        return Product::destroy($id) > 0;
+    }
+
+    /**
+     * Store uploaded images for a product.
+     *
+     * @param Product $product
+     * @param array $images
+     * @return void
+     */
+    protected function storeImages(Product $product, array $images): void
+    {
+        foreach ($images as $image) {
+            if ($image instanceof UploadedFile && $image->isValid()) {
+                $path = $image->store('products', 'public');
+                $product->images()->create(['image_path' => $path]);
+            }
+        }
+    }
+
+    /**
+     * Store variant combinations for a product.
+     *
+     * @param Product $product
+     * @param array $variants
+     * @return void
+     */
+    protected function storeVariants(Product $product, array $variants): void
+    {
+        foreach ($variants as $variant) {
+            $product->variants()->create([
+                'color' => $variant['color'],
+                'size' => $variant['size'],
+            ]);
+        }
     }
 }

@@ -11,10 +11,9 @@ class EnsureAdminRole
 {
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::guard('admin')->user();
-
-        if (!$user || !$user->hasRole('admin')) {
-            abort(403, 'Unauthorized');
+       if (!Auth::guard('admin')->check()) {
+            dd('Not authenticated as admin'); // Debug this
+            return redirect()->route('admin.login')->withErrors(['error' => 'Please login to continue.']);
         }
 
         return $next($request);

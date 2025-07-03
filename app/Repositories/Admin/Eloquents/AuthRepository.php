@@ -3,59 +3,49 @@
 namespace App\Repositories\Admin\Eloquents;
 
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Repositories\Admin\Contracts\AuthRepositoryInterface;
+use Spatie\Permission\Models\Role;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\AuthenticationException;
 
 class AuthRepository implements AuthRepositoryInterface
 {
-    public function register(Request $request)
+    public function register(array $data): void
     {
-        $validated = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|unique:users,email',
-            'password' => 'required|string|min:6', // adds password_confirmation
-        ])->validate();
+        DB::transaction(function () use ($data) {
+            $user = User::create([
+                'name'     => $data['name'],
+                'email'    => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
 
-        $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->route('dashboard')->with('success', 'Registration successful');
+            $user->assignRole(Role::findByName('admin', 'admin'));
+        });
     }
 
-    public function login(Request $request)
+    public function login(Request $request): void
     {
         $credentials = Validator::make($request->all(), [
             'email'    => 'required|email',
             'password' => 'required|string',
         ])->validate();
 
-        if (!Auth::attempt($credentials)) {
-            return back()->withErrors([
-                'email' => 'Invalid credentials.',
-            ])->onlyInput('email');
+        if (!Auth::guard('admin')->attempt($credentials)) {
+            throw new AuthenticationException('Invalid credentials.');
         }
 
         $request->session()->regenerate();
-
-        return redirect()->route('dashboard')->with('success', 'Registration successful');
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): void
     {
-        Auth::logout();
+        Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return redirect()->route('login')->with('success', 'Logged out successfully');
     }
 }
-

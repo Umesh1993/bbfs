@@ -36,13 +36,13 @@ $topbarText = 'Category Edit';
                     <div class="dz-error-message"><span data-dz-errormessage></span></div>
                 </div>
             </div>
-            <form action="{{ route('categories.update', $category->id) }}" method="POST" enctype="multipart/form-data"
+            <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data"
                 id="categoryForm">
                 @csrf
                 @method('PUT')
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Add Thumbnail Photo</h4>
+                        <h4 class="card-title">Edit Thumbnail Photo</h4>
                     </div>
                     <div class="card-body">
                         <div class="dropzone" id="categoryDropzone">
@@ -134,10 +134,10 @@ $topbarText = 'Category Edit';
                 <div class="p-3 bg-light mb-3 rounded">
                     <div class="row justify-content-end g-2">
                         <div class="col-lg-2">
-                            <button type="submit" class="btn btn-outline-secondary w-100">Save Change</button>
+                            <button type="submit" class="btn btn-outline-secondary w-100">Update Change</button>
                         </div>
                         <div class="col-lg-2">
-                            <a href="{{ route('categories.index') }}" class="btn btn-primary w-100">Cancel</a>
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-primary w-100">Cancel</a>
                         </div>
                     </div>
                 </div>
@@ -147,29 +147,70 @@ $topbarText = 'Category Edit';
 </div>
 
 @endsection
-
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
 <script>
-// Disable auto discovery to manually initialize Dropzone
 Dropzone.autoDiscover = false;
 
+const csrfToken = '{{ csrf_token() }}';
+const updateUrl = "{{ route('admin.categories.update', $category->id) }}";
+const deleteImageUrl = "{{ route('admin.categories.images.delete') }}";
+const categoryId = {{ $category->id }};
+const existingThumbnail = "{{ $category->thumbnail }}";
+
 const myDropzone = new Dropzone("#categoryDropzone", {
-    url: "#", // not uploading through Dropzone
-    autoProcessQueue: false,
+    url: updateUrl,
+    method: "POST",
+    headers: {
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': 'PUT'
+    },
+    paramName: "thumbnail",
     maxFiles: 1,
     acceptedFiles: "image/*",
-    paramName: "thumbnail",
     addRemoveLinks: true,
-    previewTemplate: document.querySelector('#preview-template').innerHTML,
-    init: function() {
-        const existingThumbnail = "{{ $category->thumbnail }}";
+    autoProcessQueue: false,
+
+    removedfile(file) {
+        file.previewElement?.remove();
+
+        if (!file.existing) return;
+
+        fetch(deleteImageUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                image_path: file.name,
+                category_id: categoryId
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw response;
+            return response.json();
+        })
+        .then(data => {
+            console.log('Image deleted:', data.message);
+        })
+        .catch(error => {
+            console.error('Delete failed:', error);
+        });
+    },
+
+    init() {
         if (existingThumbnail) {
+            const filename = existingThumbnail.split('/').pop();
             const mockFile = {
-                name: existingThumbnail.split('/').pop(),
+                name: filename,
                 size: 123456,
                 type: 'image/jpeg',
+                existing: true
             };
+
             this.emit("addedfile", mockFile);
             this.emit("thumbnail", mockFile, "{{ asset('storage/' . $category->thumbnail) }}");
             this.emit("complete", mockFile);
@@ -178,7 +219,7 @@ const myDropzone = new Dropzone("#categoryDropzone", {
     }
 });
 
-document.querySelector("#categoryForm").addEventListener("submit", function(e) {
+document.querySelector("#categoryForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
     const formData = new FormData(this);
@@ -188,26 +229,37 @@ document.querySelector("#categoryForm").addEventListener("submit", function(e) {
         formData.append("thumbnail", file);
     }
 
-    fetch(this.action, {
-            method: "POST",
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-HTTP-Method-Override': 'PUT'
-            },
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = "{{ route('categories.index') }}";
-            } else {
-                alert("Error occurred.");
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Upload failed.");
-        });
+    fetch(updateUrl, {
+        method: "POST",
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-HTTP-Method-Override': 'PUT',
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw response;
+        return response.json();
+    })
+    .then(data => {
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            alert(data.message || 'Updated successfully.');
+        }
+    })
+    .catch(async (error) => {
+        let message = 'Update failed.';
+        try {
+            const err = await error.json();
+            message = err.message || message;
+            console.error('Validation Errors:', err.errors || err);
+        } catch (e) {
+            console.error('Unknown error:', error);
+        }
+        alert(message);
+    });
 });
 </script>
 @endpush
